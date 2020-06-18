@@ -1,14 +1,6 @@
 __authors__ = 'aejb'
-import json
-import math
-import numpy
-import typing
-
-import discord
-import aiohttp
-import asyncio
-from discord.ext import commands, tasks
-from datetime import datetime, timedelta
+from discord import Member
+from discord.ext import commands
 from random import randint
 import pickledb
 
@@ -36,12 +28,12 @@ class apple(commands.Cog):
             await ctx.send("you didn't find any apples :(")
         else:
             ground_apples = self.get_apples('ground')
-            await ctx.send("you found {apples_found} apples!".format(apples_found=ground_apples))
+            await ctx.send(f"you found {ground_apples} apples!")
             self.give_apples(ctx.author.id, ground_apples)
             self.give_apples('ground', int(-1*ground_apples))
 
     @commands.command()
-    async def throw(self, ctx, thrown_at: discord.Member):
+    async def throw(self, ctx, thrown_at: Member):
         """------ throw an apple at a friend (with a mention!)"""
         throw_roll = randint(0,3)
         if self.any_apples(ctx.author.id)==False:
@@ -52,17 +44,17 @@ class apple(commands.Cog):
             await ctx.send("you missed, sorry :(")
             self.give_apples('ground', 1)
         elif throw_roll == 1:
-            await ctx.send("{thrown_at_mention} caught the apple!".format(thrown_at_mention=thrown_at.mention))
+            await ctx.send(f"{thrown_at.mention} caught the apple!")
             self.give_apples(thrown_at.id, 1)
         else:
-            await ctx.send("you hit {thrown_at_mention} with an apple.... which disappeared".format(thrown_at_mention=thrown_at.mention))
+            await ctx.send(f"you hit {thrown_at.mention} with an apple.... which disappeared")
 
     @commands.command()
     async def count(self, ctx):
         """------ tells you how many apples you have"""
         db = pickledb.load('appledb', False)
         apple_count = db.get(str(ctx.author.id))
-        await ctx.send("you've got {count} apples!".format(count=str(apple_count)))
+        await ctx.send(f"you've got {str(apple_count)} apples!")
         db.dump()
 
     @commands.command()

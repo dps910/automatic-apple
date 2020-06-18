@@ -4,8 +4,8 @@ __authors__ = 'aejb'
 ## requires python3.6
 import discord
 from discord.ext import commands
-import traceback
-import sys
+from traceback import print_exc
+from sys import stderr
 from datetime import datetime
 import pickledb
 
@@ -25,6 +25,7 @@ bot_token = gettoken()
 
 description = "here to help with your apples."
 bot = commands.Bot(command_prefix=["apl "], description=description)
+now = datetime.now()
 
 if __name__ == '__main__':
     for extension in initial_extensions:
@@ -32,8 +33,8 @@ if __name__ == '__main__':
         try:
             bot.load_extension(extension)
         except Exception as e:
-            print("Failed to load" + extension, file=sys.stderr)
-            traceback.print_exc()
+            print("Failed to load" + extension, file=stderr)
+            print_exc()
 
 @bot.event
 async def on_ready():
@@ -45,7 +46,6 @@ async def on_ready():
 
 @bot.event
 async def on_command_error(ctx, error):
-    now = datetime.now()
     if isinstance(error, commands.CommandNotFound):
         await ctx.send('That command does not exist, or the cog did not properly load.')
         await ctx.message.add_reaction('\N{CROSS MARK}')
@@ -55,14 +55,9 @@ async def on_command_error(ctx, error):
 
 @bot.event
 async def on_message_delete(ctx):
-    now = datetime.now()
     await ctx.guild.get_channel(695630766477934632).send(
-        "Message by `{author}` deleted from `{channel}` at `{time}`\n > {content}".format(author=ctx.author,
-                                                                                          channel=ctx.channel.name,
-                                                                                          time=now.strftime(
-                                                                                              "%I:%M:%S %p"),
-                                                                                          content=discord.utils.escape_markdown(
-                                                                                              ctx.content)))
+        f"Message by {ctx.author} deleted from {ctx.channel_name} at {now.strftime('%I:%M:%S %p')}\n > {discord.utils.escape_markdown(ctx.content)}"
+    )
 
 
 @bot.event
@@ -71,36 +66,32 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
     if len(str(discord.utils.escape_markdown(before.content))) < 2000 and len(
             str(discord.utils.escape_markdown(after.content))) < 2000:
         now = datetime.now()
-        await before.guild.get_channel(695630766477934632).send("Message by `{author}` edited in `{channel}` at `"
-                                                                "{time}`\n**Before:**\n> {before}\n**After:**\n> "
-                                                                "{after}".format(author=before.author,
-                                                                                 channel=before.channel.name,
-                                                                                 time=now.strftime("%I:%M:%S %p"),
-                                                                                 before=discord.utils.escape_markdown(
-                                                                                     before.content),
-                                                                                 after=discord.utils.escape_markdown(
-                                                                                         after.content)))
+        await before.guild.get_channel(695630766477934632).send(
+            f"""
+            Message by {before.author} edited in {before.channel.name} at {now.strftime('%I:%M:%S %p')}\n**Before:**\n> 
+            {discord.utils.escape_markdown(before.content)}\n**After:**\n>{discord.utils.escape_markdown(after.content)}
+            """
+        )
     else:
         now = datetime.now()
-        await before.guild.get_channel(695630766477934632).send("Message by `{author}` edited in `{channel}` at `"
-                                                                "{time}`".format(author=before.author,
-                                                                                 channel=before.channel.name,
-                                                                                 time=now.strftime("%I:%M:%S %p")))
         await before.guild.get_channel(695630766477934632).send(
-            "**Before**\n> {before}".format(before=discord.utils.escape_markdown(before.content)))
-        await before.guild.get_channel(695630766477934632).send(
-            "**After**\n> {after}".format(after=discord.utils.escape_markdown(after.content)))
+            f"""
+            Message by {before.author} edited in {before.channel_name} 
+            at {now.strftime('%I:%M:%S %p')}
+            """
+        )
+        await before.guild.get_channel(695630766477934632).send(f"**Before**\n> {discord.utils.escape_markdown(before.content)}")
+
+        await before.guild.get_channel(695630766477934632).send(f"**After**\n> {discord.utils.escape_markdown(after.content)}")
 
 @bot.event
 async def on_member_join(member: discord.Member):
     now = datetime.now()
-    await member.guild.get_channel(695630766477934632).send("User `{member}` with ID `{member.id}` joined at `{time}` :D".format(member=member,
-                                                                                 time=now.strftime("%I:%M:%S %p")))
+    await member.guild.get_channel(695630766477934632).send(f"User {member} with ID {member.id} joined at {now.strftime('%I:%M:%S %p')} :D")
 
 @bot.event
 async def on_member_remove(member: discord.Member):
     now = datetime.now()
-    await member.guild.get_channel(695630766477934632).send("User `{member}` with ID `{member.id}` left at `{time}` :(".format(member=member,
-                                                                                 time=now.strftime("%I:%M:%S %p")))
+    await member.guild.get_channel(695630766477934632).send(f"User {member} with ID {member.id} left at {now.strftime('%I:%M:%S %p')} :(")
 
 bot.run(bot_token)
